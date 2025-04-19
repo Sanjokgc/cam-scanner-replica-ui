@@ -1,5 +1,5 @@
 
-import { Home, FileText, Tools, Trash2 } from "lucide-react";
+import { Home, FileText, Settings, Trash2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const SidebarItem = ({ icon: Icon, label, path, isActive }: { icon: any; label: string; path: string; isActive: boolean }) => (
@@ -20,7 +20,7 @@ const Sidebar = () => {
   const menuItems = [
     { icon: Home, label: "Home", path: "/" },
     { icon: FileText, label: "My Documents", path: "/documents" },
-    { icon: Tools, label: "Tools", path: "/tools" },
+    { icon: Settings, label: "Tools", path: "/tools" },
     { icon: Trash2, label: "Trash", path: "/trash" },
   ];
 

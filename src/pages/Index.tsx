@@ -1,5 +1,4 @@
-
-import { FileText, FileSpreadsheet, FilePresentation, Image, FilePlus, Trash2, Grid } from "lucide-react";
+import { FileText, FileSpreadsheet, Presentation, Image, FilePlus, Trash2, Grid } from "lucide-react";
 
 const ToolButton = ({ icon: Icon, label, description }: { icon: any; label: string; description: string }) => (
   <button className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-primary hover:shadow-md transition-all w-full">
@@ -26,7 +25,7 @@ const Index = () => {
       description: "Convert PDF to editable Excel spreadsheet",
     },
     {
-      icon: FilePresentation,
+      icon: Presentation,
       label: "PDF to PPT",
       description: "Convert PDF to PowerPoint presentation",
     },
