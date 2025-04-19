@@ -8,6 +8,8 @@ const PdfToWordConverter: React.FC = () => {
   const [isConverting, setIsConverting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile && selectedFile.type === 'application/pdf') {
@@ -31,7 +33,7 @@ const PdfToWordConverter: React.FC = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:5000/convert/pdf-to-word', {
+      const response = await fetch(`${API_URL}/convert/pdf-to-word`, {
         method: 'POST',
         body: formData,
       });
