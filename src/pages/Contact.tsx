@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 
+// Contact form schema with validation rules
 const formSchema = z.object({
   name: z.string().min(2, {
     message: "Name must be at least 2 characters.",
