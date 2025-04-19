@@ -14,6 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { Card } from "@/components/ui/card";
+import { Download, Windows, Apple, Linux } from "lucide-react";
 
 // Contact form schema with validation rules
 const formSchema = z.object({
@@ -127,6 +129,52 @@ const Contact = () => {
             <Button type="submit" className="w-full">Send Message</Button>
           </form>
         </Form>
+
+        {/* Download Section */}
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold mb-6">Download Our App</h2>
+          <p className="text-muted-foreground mb-8">
+            Get the full experience by downloading our desktop application. Available for all major platforms.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="flex flex-col items-center text-center">
+                <Windows className="w-12 h-12 mb-4 text-blue-500" />
+                <h3 className="font-semibold text-lg mb-2">Windows</h3>
+                <p className="text-sm text-muted-foreground mb-4">Version 1.0.0</p>
+                <Button className="w-full">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </Button>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="flex flex-col items-center text-center">
+                <Apple className="w-12 h-12 mb-4 text-gray-500" />
+                <h3 className="font-semibold text-lg mb-2">MacOS</h3>
+                <p className="text-sm text-muted-foreground mb-4">Version 1.0.0</p>
+                <Button className="w-full">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </Button>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="flex flex-col items-center text-center">
+                <Linux className="w-12 h-12 mb-4 text-orange-500" />
+                <h3 className="font-semibold text-lg mb-2">Linux</h3>
+                <p className="text-sm text-muted-foreground mb-4">Version 1.0.0</p>
+                <Button className="w-full">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
