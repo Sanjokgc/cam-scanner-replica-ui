@@ -50,16 +50,22 @@ app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok',
     python: process.env.PYTHON_PATH || 'python',
-    node: process.version
+    node: process.version,
+    uploadsDir: path.join(__dirname, 'uploads')
   });
 });
 
 // PDF to Word conversion endpoint
 app.post('/convert/pdf-to-word', upload.single('file'), async (req, res) => {
+  console.log('Received conversion request');
+  
   try {
     if (!req.file) {
+      console.error('No file uploaded');
       return res.status(400).json({ error: 'No file uploaded' });
     }
+
+    console.log('File uploaded successfully:', req.file.path);
 
     const inputPath = req.file.path;
     const outputDir = path.dirname(inputPath);
@@ -68,22 +74,29 @@ app.post('/convert/pdf-to-word', upload.single('file'), async (req, res) => {
 
     // Get Python path from environment or use default
     const pythonPath = process.env.PYTHON_PATH || 'python';
+    console.log('Using Python path:', pythonPath);
     
     // Convert PDF to DOCX using Python script
     try {
+      console.log('Starting Python conversion...');
       const { stdout, stderr } = await execPromise(
         `${pythonPath} "${path.join(__dirname, 'convert.py')}" "${inputPath}" "${outputPath}"`
       );
       
+      console.log('Python conversion stdout:', stdout);
+      
       if (stderr) {
-        console.error('Conversion error:', stderr);
-        throw new Error('Conversion failed');
+        console.error('Python conversion stderr:', stderr);
+        throw new Error('Conversion failed: ' + stderr);
       }
 
       // Check if conversion was successful
       if (!fs.existsSync(outputPath)) {
-        throw new Error('Conversion failed');
+        console.error('Output file not created:', outputPath);
+        throw new Error('Conversion failed: Output file not created');
       }
+
+      console.log('Conversion successful, file created:', outputPath);
 
       // Set headers for file download
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
@@ -98,6 +111,7 @@ app.post('/convert/pdf-to-word', upload.single('file'), async (req, res) => {
         try {
           fs.unlinkSync(inputPath);
           fs.unlinkSync(outputPath);
+          console.log('Temporary files cleaned up');
         } catch (cleanupError) {
           console.error('Cleanup error:', cleanupError);
         }
@@ -110,7 +124,7 @@ app.post('/convert/pdf-to-word', upload.single('file'), async (req, res) => {
       } catch (cleanupError) {
         console.error('Cleanup error:', cleanupError);
       }
-      throw new Error('Conversion failed. Please try again.');
+      throw new Error('Conversion failed: ' + error.message);
     }
   } catch (error) {
     console.error('Error:', error);
@@ -120,7 +134,7 @@ app.post('/convert/pdf-to-word', upload.single('file'), async (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Global error handler:', err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
@@ -128,4 +142,5 @@ app.use((err, req, res, next) => {
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
   console.log('Python path:', process.env.PYTHON_PATH || 'python');
+  console.log('Uploads directory:', path.join(__dirname, 'uploads'));
 }); 

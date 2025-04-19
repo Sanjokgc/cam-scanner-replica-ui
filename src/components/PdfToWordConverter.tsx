@@ -7,6 +7,7 @@ const PdfToWordConverter: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isConverting, setIsConverting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<number>(0);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -15,6 +16,7 @@ const PdfToWordConverter: React.FC = () => {
     if (selectedFile && selectedFile.type === 'application/pdf') {
       setFile(selectedFile);
       setError(null);
+      setProgress(0);
     } else {
       setError('Please select a valid PDF file');
     }
@@ -28,25 +30,38 @@ const PdfToWordConverter: React.FC = () => {
 
     setIsConverting(true);
     setError(null);
+    setProgress(0);
 
     const formData = new FormData();
     formData.append('file', file);
 
     try {
+      console.log('Starting conversion...');
+      setProgress(10);
+
       const response = await fetch(`${API_URL}/convert/pdf-to-word`, {
         method: 'POST',
         body: formData,
       });
 
+      console.log('Response status:', response.status);
+      setProgress(30);
+
       if (!response.ok) {
-        throw new Error('Conversion failed');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Conversion failed');
       }
+
+      setProgress(60);
 
       // Get the filename from the response headers
       const contentDisposition = response.headers.get('content-disposition');
       const filename = contentDisposition
-        ? contentDisposition.split('filename=')[1]
+        ? contentDisposition.split('filename=')[1].replace(/"/g, '')
         : 'converted.docx';
+
+      console.log('Downloading file:', filename);
+      setProgress(80);
 
       // Create a blob from the response
       const blob = await response.blob();
@@ -60,8 +75,12 @@ const PdfToWordConverter: React.FC = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+
+      setProgress(100);
+      console.log('Conversion completed successfully');
     } catch (err) {
-      setError('Conversion failed. Please try again.');
+      console.error('Conversion error:', err);
+      setError(err instanceof Error ? err.message : 'Conversion failed. Please try again.');
     } finally {
       setIsConverting(false);
     }
@@ -78,9 +97,19 @@ const PdfToWordConverter: React.FC = () => {
             accept=".pdf"
             onChange={handleFileChange}
             className="w-full"
+            disabled={isConverting}
           />
           {error && <p className="text-red-500 text-sm">{error}</p>}
         </div>
+
+        {isConverting && (
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full" 
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+        )}
 
         <Button
           onClick={handleConvert}
