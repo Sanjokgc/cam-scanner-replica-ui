@@ -3,15 +3,16 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { PDFDocument } = require('pdf-lib');
-const mammoth = require('mammoth');
+const { exec } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: process.env.FRONTEND_URL || '*',
   credentials: true
 }));
 app.use(express.json());
@@ -19,9 +20,9 @@ app.use(express.json());
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = 'uploads';
+    const uploadDir = path.join(__dirname, 'uploads');
     if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir);
+      fs.mkdirSync(uploadDir, { recursive: true });
     }
     cb(null, uploadDir);
   },
@@ -33,7 +34,7 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 50 * 1024 * 1024, // 50MB limit
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype === 'application/pdf') {
@@ -46,7 +47,11 @@ const upload = multer({
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+  res.status(200).json({ 
+    status: 'ok',
+    python: process.env.PYTHON_PATH || 'python',
+    node: process.version
+  });
 });
 
 // PDF to Word conversion endpoint
@@ -57,45 +62,59 @@ app.post('/convert/pdf-to-word', upload.single('file'), async (req, res) => {
     }
 
     const inputPath = req.file.path;
-    const outputPath = path.join('uploads', `${Date.now()}.docx`);
+    const outputDir = path.dirname(inputPath);
+    const outputFileName = path.basename(inputPath, '.pdf') + '.docx';
+    const outputPath = path.join(outputDir, outputFileName);
 
-    // Read the PDF file
-    const pdfBytes = fs.readFileSync(inputPath);
-    const pdfDoc = await PDFDocument.load(pdfBytes);
+    // Get Python path from environment or use default
+    const pythonPath = process.env.PYTHON_PATH || 'python';
     
-    // Extract text and formatting
-    const pages = pdfDoc.getPages();
-    let docxContent = '';
-
-    for (let i = 0; i < pages.length; i++) {
-      const page = pages[i];
-      const text = await page.getText();
-      docxContent += text + '\n\n';
-    }
-
-    // Convert to DOCX using mammoth
-    const result = await mammoth.convertToHtml({ text: docxContent });
-    const docxBuffer = await mammoth.convertToDocx({ text: docxContent });
-
-    // Save the DOCX file
-    fs.writeFileSync(outputPath, docxBuffer);
-
-    // Set headers for file download
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-    res.setHeader('Content-Disposition', `attachment; filename=${path.basename(outputPath)}`);
-
-    // Send the converted file
-    res.download(outputPath, (err) => {
-      if (err) {
-        console.error('Error sending file:', err);
+    // Convert PDF to DOCX using Python script
+    try {
+      const { stdout, stderr } = await execPromise(
+        `${pythonPath} "${path.join(__dirname, 'convert.py')}" "${inputPath}" "${outputPath}"`
+      );
+      
+      if (stderr) {
+        console.error('Conversion error:', stderr);
+        throw new Error('Conversion failed');
       }
-      // Clean up files
-      fs.unlinkSync(inputPath);
-      fs.unlinkSync(outputPath);
-    });
+
+      // Check if conversion was successful
+      if (!fs.existsSync(outputPath)) {
+        throw new Error('Conversion failed');
+      }
+
+      // Set headers for file download
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', `attachment; filename="${outputFileName}"`);
+
+      // Send the converted file
+      res.download(outputPath, (err) => {
+        if (err) {
+          console.error('Error sending file:', err);
+        }
+        // Clean up files
+        try {
+          fs.unlinkSync(inputPath);
+          fs.unlinkSync(outputPath);
+        } catch (cleanupError) {
+          console.error('Cleanup error:', cleanupError);
+        }
+      });
+    } catch (error) {
+      console.error('Conversion error:', error);
+      // Clean up input file
+      try {
+        fs.unlinkSync(inputPath);
+      } catch (cleanupError) {
+        console.error('Cleanup error:', cleanupError);
+      }
+      throw new Error('Conversion failed. Please try again.');
+    }
   } catch (error) {
-    console.error('Conversion error:', error);
-    res.status(500).json({ error: 'Conversion failed' });
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message || 'Conversion failed' });
   }
 });
 
@@ -108,4 +127,5 @@ app.use((err, req, res, next) => {
 // Start server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
+  console.log('Python path:', process.env.PYTHON_PATH || 'python');
 }); 
