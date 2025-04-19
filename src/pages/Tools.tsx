@@ -1,7 +1,7 @@
 import { 
   FileText, FileSpreadsheet, Presentation, Image as ImageIcon, 
   FilePlus, Lock, FileKey, FileSearch, Scissors, RotateCw,
-  PenTool, FileImage, Stamp
+  PenTool, FileImage, Stamp, Download, CloudDownload, FileDown
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -149,6 +149,29 @@ const Tools = () => {
     }
   ];
 
+  const downloadTools: Tool[] = [
+    {
+      icon: Download,
+      label: "PDF Downloader",
+      description: "Download PDF files from URLs with ease",
+      id: "pdf-downloader"
+    },
+    {
+      icon: CloudDownload,
+      label: "Batch Downloader",
+      description: "Download multiple PDF files simultaneously",
+      isProFeature: true,
+      id: "batch-downloader"
+    },
+    {
+      icon: FileDown,
+      label: "Secure Downloader",
+      description: "Download PDFs with enhanced security features",
+      isProFeature: true,
+      id: "secure-downloader"
+    }
+  ];
+
   return (
     <div className="space-y-10">
       <div>
@@ -164,6 +187,15 @@ const Tools = () => {
         <h2 className="text-2xl font-semibold mb-6">Edit Tools</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {editTools.map((tool) => (
+            <ToolCard key={tool.id} {...tool} />
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-semibold mb-6">Download Tools</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {downloadTools.map((tool) => (
             <ToolCard key={tool.id} {...tool} />
           ))}
         </div>
