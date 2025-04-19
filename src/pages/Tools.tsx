@@ -1,11 +1,9 @@
-import { useState } from "react";
 import { 
   FileText, FileSpreadsheet, Presentation, Image as ImageIcon, 
   FilePlus, Lock, FileKey, FileSearch, Scissors, RotateCw,
   PenTool, FileImage, Stamp
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import PdfToWord from "@/components/tools/PdfToWord";
 
 interface Tool {
   icon: any;
@@ -15,12 +13,9 @@ interface Tool {
   id: string;
 }
 
-const ToolCard = ({ icon: Icon, label, description, isProFeature, id, onClick }: Tool & { onClick: (id: string) => void }) => (
+const ToolCard = ({ icon: Icon, label, description, isProFeature }: Tool) => (
   <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105">
-    <button 
-      className="w-full text-left p-6 transition-colors hover:bg-gray-50"
-      onClick={() => onClick(id)}
-    >
+    <div className="w-full text-left p-6 transition-colors hover:bg-gray-50">
       <div className="flex items-start gap-4">
         <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
           <Icon size={24} className="text-primary" />
@@ -37,21 +32,11 @@ const ToolCard = ({ icon: Icon, label, description, isProFeature, id, onClick }:
           <p className="text-sm text-gray-500 mt-1">{description}</p>
         </div>
       </div>
-    </button>
+    </div>
   </Card>
 );
 
 const Tools = () => {
-  const [selectedTool, setSelectedTool] = useState<string | null>(null);
-
-  const handleToolSelect = (toolId: string) => {
-    setSelectedTool(toolId);
-  };
-
-  const handleBack = () => {
-    setSelectedTool(null);
-  };
-
   const convertTools: Tool[] = [
     {
       icon: FileText,
@@ -164,46 +149,13 @@ const Tools = () => {
     }
   ];
 
-  // If a tool is selected, render the appropriate component
-  if (selectedTool) {
-    switch (selectedTool) {
-      case "pdf-to-word":
-        return (
-          <div className="space-y-6">
-            <button 
-              onClick={handleBack}
-              className="text-primary hover:underline flex items-center gap-1"
-            >
-              ← Back to all tools
-            </button>
-            <PdfToWord />
-          </div>
-        );
-      default:
-        return (
-          <div className="space-y-6">
-            <button 
-              onClick={handleBack}
-              className="text-primary hover:underline flex items-center gap-1"
-            >
-              ← Back to all tools
-            </button>
-            <div className="p-6 text-center">
-              <h2 className="text-2xl font-semibold mb-2">Coming Soon</h2>
-              <p className="text-gray-500">This tool is currently under development.</p>
-            </div>
-          </div>
-        );
-    }
-  }
-
   return (
     <div className="space-y-10">
       <div>
         <h2 className="text-2xl font-semibold mb-6">Convert Tools</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {convertTools.map((tool) => (
-            <ToolCard key={tool.id} {...tool} onClick={handleToolSelect} />
+            <ToolCard key={tool.id} {...tool} />
           ))}
         </div>
       </div>
@@ -212,7 +164,7 @@ const Tools = () => {
         <h2 className="text-2xl font-semibold mb-6">Edit Tools</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {editTools.map((tool) => (
-            <ToolCard key={tool.id} {...tool} onClick={handleToolSelect} />
+            <ToolCard key={tool.id} {...tool} />
           ))}
         </div>
       </div>
