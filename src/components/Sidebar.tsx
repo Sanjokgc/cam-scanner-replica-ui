@@ -1,3 +1,4 @@
+
 import { Home, FileText, Settings, Trash2, MessageSquare } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -18,8 +19,8 @@ const Sidebar = () => {
   
   const menuItems = [
     { icon: Home, label: "Home", path: "/" },
-    { icon: FileText, label: "My Documents", path: "/documents" },
-    { icon: Settings, label: "Tools", path: "/tools" },
+    { icon: FileText, label: "Tools", path: "/tools" },
+    { icon: Settings, label: "Settings", path: "/settings" },
     { icon: MessageSquare, label: "Contact Us", path: "/contact" },
     { icon: Trash2, label: "Trash", path: "/trash" },
   ];
